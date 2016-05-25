@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO Demo</title>
+    <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.24/vue.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+  	<h1>Socket.IO Demo</h1>
+ 
+	<div>Socket id</div>
+	<ul><li>{{ id }}</li></ul>
+
+  	<div>Server Object:</div>
+  	<ul>
+  		<li>
+	  		[ {{ remoteAddress }} ] {{ serverData.msg }}
+  		</li>
+  	</ul>
+  	
+
+  	<div>Local Object:</div>
+  	
+  	<ul>
+  		<!-- <li v-for="value in showList">
+			[ {{ $key }} ] : {{ value }}
+		</li>	 -->
+  		<li v-for="item in localData">
+			[ {{ item.id }} ] {{ item.msg }}
+		</li>	
+  	</ul>
+  	
+  	
+    
+    
+	<script>
+	  
+		var socket = io();
+
+		var vm = new Vue({
+			el:'body',
+			data:{
+				remoteAddress:'',
+				serverData:{},
+				id:'',//socket id
+				localData:[],
+				showList:{}
+				// userid:123
+
+			},
+			methods:{
+				sendLocal: function(){
+					var t = moment().format('MMMM Do YYYY, HH:mm:ss a');	
+					
+					var msg = t;
+					this.id = socket.id;
+					socket.emit('chat message', {type:'local', id:this.id, msg:msg});
+					// this.showList[socket.id]
+					// console.log(socket.io.uri)
+				},
+			},
+			ready:function(){
+				
+				setInterval(this.sendLocal,1000);	
+				
+				//recive message
+				socket.on('chat message', function(data){
+					if(data.type === 'server'){
+						this.serverData = data;
+					}
+
+					if(data.type === 'local'){
+						// this.localData = data;
+						this.showList[data.id] = data.msg;
+						this.localData = [];
+						for(var item in this.showList){
+							// console.log(item, this.showList[item]);
+							var isNew = true;
+							for(var i = 0; i < this.localData.length; i++){
+								if(this.localData[i].id === item){
+									this.localData[i].msg = this.showList[item];
+									isNew = false;
+									break;
+								}
+							}
+							if(isNew){
+								this.localData.push({id:item, msg:this.showList[item]});	
+							}
+
+						}
+					}
+					// console.log(data.type, data.id, data.msg);
+					
+				}.bind(this));
+
+				
+
+				socket.on('init', function(data){
+					if(socket.id === data.id){
+						this.id = socket.id;
+						// console.log(data);
+						this.remoteAddress = data.remoteAddress;	
+					}
+				}.bind(this));
+
+				socket.on('remove', function(data){
+					// console.log('remove',data);
+					this.showList = {};
+					this.localData = [];
+					// for(var j = 0; j < this.localData.length; j++){
+
+					// 	if(this.localData[j].id === data){
+					// 		delete this.localData[j];
+					// 	}
+					// }
+				}.bind(this));
+			}
+		});
+
+	</script>
+
+  </body>
+</html>
