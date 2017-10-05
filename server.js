@@ -45,13 +45,19 @@ io.on('connection', function(socket){
   id = id.replace(/\/#/g,'');
   
   var cookie = socket.handshake.headers.cookie;
-  var host = socket.handshake.headers.host;
-  var address = socket.handshake.address
-  // console.log(socket.handshake);
-  console.log('a user connected', 'cookie',cookie, 'id',id, 'address', address, 'host', host);
-  
-  io.emit('message', {type:'init',id:0, host:host, address:address}); 
+  var hostname = require('os').hostname();
+  console.log(hostname);
+  require('dns').lookup(hostname, function (err, add, fam) {
+    var msg = require('util').format('hostname: %s   addr: %s', hostname, add);
+    
+    var host = socket.handshake.headers.host;
+    var address = socket.handshake.address
+    // console.log(socket.handshake);
+    console.log('a user connected', 'cookie',cookie, 'id',id, 'address', address, 'host', host);
+    
+    io.emit('message', {type:'init',id:0, name:hostname, addr:add, host:host, address:address}); 
 
+  })
 
   socket.on('disconnect', function(){
     console.log('user disconnected', id);

@@ -8,40 +8,47 @@
     <script src="/socket.io/socket.io.js"></script>
   </head>
   <body>
-  	<h1>API Server Info</h1>
- 
+  	<h1>Server Info</h1>
+
 	<div>Server Host</div>
+	<ul><li> {{ serverName }} </li></ul>
+	<ul><li> {{ serverAddress }} </li></ul>
 	<ul><li> {{ serverHost }} </li></ul>
 
 	<div>Server Time</div>
 	<ul><li> {{ serverTime }} </li></ul>
-	
+
   	<div v-if = "serverData.length > 0">Server Message</div>
   	<ul>
   		<li v-for="item in serverData">
 			[ {{ item.time }} ] {{ item.msg }}
 		</li>
   	</ul>
-  	
-    
+
+
 	<script>
-	  
+
 		var socket = io();
 
 		var vm = new Vue({
 			el:'body',
 			data:{
+				serverName:'',
+				serverAddress:'',
 				serverHost:'',
 				serverTime:'',
 				serverData:[],
 				id:'',//client socket id
 			},
 			ready:function(){
-				
+
 				//recive message
 				socket.on('message', function(data){
 					if(data.type === 'init'){
+						console.log(data);
 						this.id = data.id;
+						this.serverName = data.name;
+						this.serverAddress = data.addr;
 						this.serverHost = data.host;
 					}
 
@@ -58,7 +65,7 @@
 					}
 
 					// console.log(data.type, data.id, data.msg, data.time);
-					
+
 				}.bind(this));
 			}
 		});
